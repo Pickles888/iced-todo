@@ -1,2 +1,1 @@
-# iced-todo
-Todo list in rust using iced.rs
+:crab: :clipboard: :ice_cube:
