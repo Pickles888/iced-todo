@@ -12,6 +12,10 @@ impl Icon {
             icon: icon_type,
         }
     }
+
+    pub fn get(&self) -> char {
+        self.char
+    }
 }
 
 #[derive(Debug, Eq, Hash, PartialEq)]

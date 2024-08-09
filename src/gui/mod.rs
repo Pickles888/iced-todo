@@ -1,8 +1,11 @@
 use iced::{
     executor,
-    widget::{column, container, row, scrollable, text, Column},
+    widget::{column, row, scrollable, text},
     Application, Command, Element, Renderer, Theme,
 };
+
+mod icons;
+mod todo_widgets;
 
 pub struct Todo;
 
@@ -28,12 +31,7 @@ impl Application for Todo {
     }
 
     fn view(&self) -> Element<'_, Self::Message, Self::Theme, Renderer> {
-        let side_bar = scrollable(
-            Column::from_vec(Vec::from())
-                .padding(10)
-                .max_width(500)
-                .spacing(5),
-        );
+        let side_bar = scrollable(column![text("test")].padding(10).max_width(500).spacing(5));
 
         row![side_bar].into()
     }
