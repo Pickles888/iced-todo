@@ -21,7 +21,7 @@ pub enum TodoMessage {
     Completed(usize, bool),
     Edit(usize),
     InputEdit(String),
-    Filter(Filter)
+    Filter(Filter),
     NewSubmitted,
 }
 
@@ -90,6 +90,7 @@ impl TodoListWidget {
 
                 Command::none()
             }
+            TodoMessage::Filter(_) => todo!(),
         }
     }
 
@@ -106,8 +107,13 @@ impl TodoListWidget {
         };
 
         let todo = {
-            let _items = self
+            let filtered = self
                 .todo_items
+                .iter()
+                .filter(|item| self.filter.filter(item.clone()))
+                .collect::<Vec<_>>();
+
+            let _items = filtered
                 .iter()
                 .enumerate()
                 .map(|(index, item)| item.view(index))

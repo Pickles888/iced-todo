@@ -8,7 +8,7 @@ pub enum Filter {
 }
 
 impl Filter {
-    pub fn match_filter(&self, todoitem: TodoItemWidget) -> bool {
+    pub fn filter(&self, todoitem: &TodoItemWidget) -> bool {
         match *self {
             Filter::All => true,
             Filter::Uncomplete => !todoitem.completed,
