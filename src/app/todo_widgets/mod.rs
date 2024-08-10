@@ -1,6 +1,9 @@
+use filter::Filter;
 use iced::{
-    widget::{button, column, horizontal_space, row, text, Button, Checkbox, Column, TextInput},
-    Command, Element,
+    widget::{
+        button, column, horizontal_space, row, text, Button, Checkbox, Column, Text, TextInput,
+    },
+    Command, Element, Theme,
 };
 
 use super::Message;
@@ -49,6 +52,7 @@ pub struct TodoListWidget {
     pub todo_items: Vec<TodoItemWidget>,
     pub name: String,
     pub input: String,
+    pub filter: Filter,
 }
 
 impl TodoListWidget {
@@ -57,6 +61,7 @@ impl TodoListWidget {
             todo_items: Vec::new(),
             name: name.to_string(),
             input: "".to_owned(),
+            filter: Filter::All,
         }
     }
 
@@ -99,14 +104,25 @@ impl TodoListWidget {
             row![input, new_button].spacing(10)
         };
 
-        let todo = Column::with_children(
-            self.todo_items
+        let todo = {
+            let _items = self
+                .todo_items
                 .iter()
                 .enumerate()
                 .map(|(index, item)| item.view(index))
-                .collect::<Vec<_>>(),
-        )
-        .spacing(10);
+                .collect::<Vec<_>>();
+
+            if _items.is_empty() {
+                let _items: Text<'_, Theme, iced::Renderer> = text(match self.filter {
+                    Filter::All => "Press + to add a new ",
+                    Filter::Uncomplete => "Nothing Todo!",
+                    Filter::Completed => "Nothing Completed...",
+                })
+                .size(30);
+            }
+
+            Column::with_children(_items).spacing(10)
+        };
 
         let status = {
             //let filter = row![button("All").]
