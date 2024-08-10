@@ -1,8 +1,7 @@
-use gui::Todo;
+use app::Todo;
 use iced::{Application, Settings};
 
-mod gui;
-mod todo_api;
+mod app;
 
 fn main() -> iced::Result {
     Todo::run(Settings::default())
