@@ -65,7 +65,7 @@ impl Application for Todo {
                             .on_press(Message::ListBarPressed(index))
                             .into()
                     })
-                    .collect::<Vec<Element<Message>>>(),
+                    .collect::<Vec<_>>(),
             )
             .padding(10)
             .width(150),

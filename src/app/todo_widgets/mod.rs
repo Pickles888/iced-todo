@@ -104,7 +104,7 @@ impl TodoListWidget {
                 .iter()
                 .enumerate()
                 .map(|(index, item)| item.view(index))
-                .collect::<Vec<Element<_>>>(),
+                .collect::<Vec<_>>(),
         )
         .spacing(10);
 
