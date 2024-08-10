@@ -74,7 +74,7 @@ impl Application for Todo {
             self.lists
                 .get(self.list)
                 .unwrap()
-                .view(self.list)
+                .view()
                 .map(|message| Message::Item(self.list, message)),
         );
 

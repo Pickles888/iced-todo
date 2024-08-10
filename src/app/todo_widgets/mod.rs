@@ -1,13 +1,11 @@
 use iced::{
-    widget::{
-        button, column, horizontal_space, row, text,
-        text_editor::{Content, TextEditor},
-        Button, Checkbox, Column, TextInput,
-    },
-    Command, Element, Length,
+    widget::{button, column, horizontal_space, row, text, Button, Checkbox, Column, TextInput},
+    Command, Element,
 };
 
 use super::Message;
+
+mod filter;
 
 #[derive(Debug)]
 pub struct TodoItemWidget {
@@ -89,12 +87,12 @@ impl TodoListWidget {
         }
     }
 
-    pub fn view(&self, index: usize) -> Element<TodoMessage> {
+    pub fn view(&self) -> Element<TodoMessage> {
         let title = text(&self.name).size(30);
 
         let new_todo = {
             let input = TextInput::new("Input Todo", &self.input)
-                .on_input(move |message| TodoMessage::InputEdit(index, message))
+                .on_input(TodoMessage::InputEdit)
                 .on_submit(TodoMessage::NewSubmitted);
             let new_button = button("New").on_press(TodoMessage::NewSubmitted);
 
@@ -116,7 +114,7 @@ impl TodoListWidget {
             row![horizontal_space(),]
         };
 
-        column![title, new_todo, todo]
+        column![title, new_todo, todo, status]
             .padding(15)
             .spacing(10)
             .into()
