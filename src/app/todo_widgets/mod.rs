@@ -21,6 +21,7 @@ pub enum TodoMessage {
     Completed(usize, bool),
     Edit(usize),
     InputEdit(String),
+    Filter(Filter)
     NewSubmitted,
 }
 
