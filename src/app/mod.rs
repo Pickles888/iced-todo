@@ -1,6 +1,6 @@
 use iced::{
     executor,
-    widget::{button, row, scrollable, Column},
+    widget::{button, container, row, scrollable, Column},
     Application, Command, Element, Renderer, Theme,
 };
 use todo_widgets::{TodoListWidget, TodoMessage};
@@ -54,7 +54,7 @@ impl Application for Todo {
     }
 
     fn view(&self) -> Element<'_, Self::Message, Self::Theme, Renderer> {
-        let todo_lists_bar = scrollable(
+        let todo_lists_bar = container(scrollable(
             Column::from_vec(
                 self.lists
                     .iter()
@@ -68,7 +68,7 @@ impl Application for Todo {
             )
             .padding(10)
             .width(150),
-        );
+        ));
 
         let todo_list = self
             .lists

@@ -1,8 +1,8 @@
 use filter::{filter_button, Filter};
 use iced::{
     widget::{
-        button, column, horizontal_space, row, text, vertical_space, Button, Checkbox, Column,
-        Text, TextInput,
+        button, column, container, horizontal_space, row, scrollable, text, vertical_space, Button,
+        Checkbox, Column, Text, TextInput,
     },
     Command, Element, Theme,
 };
@@ -85,7 +85,7 @@ impl TodoListWidget {
                 Command::none()
             }
             TodoMessage::NewSubmitted => {
-                let text = self.input.clone();
+                let text = crate::utils::strip_trailing_newline(&self.input);
                 self.add(&text);
                 self.input = "".to_owned();
 
@@ -111,30 +111,38 @@ impl TodoListWidget {
             row![input, new_button].spacing(10)
         };
 
-        let todo_items = {
+        let todo_items: Element<_> = {
             let filtered = self
                 .todo_items
                 .iter()
                 .filter(|item| self.filter.filter(item))
                 .collect::<Vec<_>>();
 
-            let _items = filtered
+            let items = filtered
                 .iter()
                 .enumerate()
                 .map(|(index, item)| item.view(index))
                 .collect::<Vec<_>>();
 
-            if _items.is_empty() {
-                let _items: Text<'_, Theme, iced::Renderer> = text(match self.filter {
-                    Filter::All => "Press + to add a new ",
-                    Filter::Uncomplete => "Nothing Todo!",
-                    Filter::Completed => "Nothing Completed...",
-                })
-                .size(30);
+            if items.is_empty() {
+                container(
+                    text(match self.filter {
+                        Filter::All => "Press + to add a new item todo",
+                        Filter::Uncomplete => "Nothing Todo!",
+                        Filter::Completed => "Nothing Completed...",
+                    })
+                    .size(30),
+                )
+                .padding(10)
+                .into()
+            } else {
+                scrollable(Column::with_children(items).spacing(10).padding(5)).into()
             }
-
-            Column::with_children(_items).spacing(10).padding(5)
         };
+
+        let todo = column![title, new_todo, todo_items]
+            .spacing(10)
+            .align_items(iced::Alignment::Center);
 
         let status = {
             let filter = row![
@@ -146,8 +154,6 @@ impl TodoListWidget {
 
             row![horizontal_space(), filter]
         };
-
-        let todo = column![title, new_todo, todo_items].spacing(10);
 
         column![todo, vertical_space(), status]
             .spacing(10)
