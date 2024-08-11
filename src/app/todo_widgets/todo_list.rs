@@ -1,14 +1,19 @@
 use iced::{
+    theme::Text,
     widget::{
-        button, column, container, horizontal_space, row, scrollable, text, text_input,
-        vertical_space, Column,
+        column, container, horizontal_space, row, scrollable, text, text_input, vertical_space,
+        Column,
     },
     Command, Element,
 };
 
-use crate::app::{
-    todo_widgets::filter::{filter_button, Filter},
-    Message,
+use crate::{
+    app::{
+        colors,
+        todo_widgets::filter::{filter_button, Filter},
+        Message,
+    },
+    utils::strip_trailing_newline,
 };
 
 use super::{
@@ -47,7 +52,7 @@ impl TodoListWidget {
             }
             TodoMessage::NewSubmitted => {
                 if !self.input.is_empty() {
-                    let text = crate::utils::strip_trailing_newline(&self.input);
+                    let text = strip_trailing_newline(&self.input);
                     self.add(&text);
                     self.input = "".to_owned();
                 }
@@ -71,22 +76,11 @@ impl TodoListWidget {
     }
 
     pub fn view(&self) -> Element<TodoMessage> {
-        let title = text(&self.name).size(30);
+        let title = text(&self.name).size(50);
 
-        let new_todo = {
-            let input = text_input("Input Todo", &self.input)
-                .on_input(TodoMessage::InputEdit)
-                .on_submit(TodoMessage::NewSubmitted);
-            let new_button = button(container("+").center_x().center_y())
-                .width(30)
-                .on_press_maybe(if self.input.is_empty() {
-                    None
-                } else {
-                    Some(TodoMessage::NewSubmitted)
-                });
-
-            row![input, new_button].spacing(10)
-        };
+        let new_todo = text_input("Input Todo", &self.input)
+            .on_input(TodoMessage::InputEdit)
+            .on_submit(TodoMessage::NewSubmitted);
 
         let todo_items: Element<_> = {
             let filtered = self
@@ -105,11 +99,12 @@ impl TodoListWidget {
                 container(column![
                     vertical_space(),
                     text(match self.filter {
-                        Filter::All => "Press + to add a new item todo",
+                        Filter::All => "Add a new item todo",
                         Filter::Uncomplete => "Nothing Todo!",
                         Filter::Completed => "Nothing Completed...",
                     })
-                    .size(30),
+                    .size(30)
+                    .style(Text::Color(colors::text::secondary())),
                     vertical_space(),
                 ])
                 .padding(10)
@@ -121,7 +116,7 @@ impl TodoListWidget {
 
         let todo = column![title, new_todo, todo_items]
             .padding(15)
-            .spacing(10)
+            .spacing(15)
             .align_items(iced::Alignment::Center);
 
         let status = {

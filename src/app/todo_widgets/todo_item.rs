@@ -16,7 +16,6 @@ pub enum ItemMessage {
 #[derive(Debug, Clone)]
 pub enum EditMessage {
     Name(String),
-    SubmitName,
     Delete,
     Done,
 }
@@ -51,12 +50,11 @@ impl TodoItemWidget {
 
                     Command::none()
                 }
-                EditMessage::SubmitName => {
+                EditMessage::Done => {
                     self.editing = false;
 
                     Command::none()
                 }
-                EditMessage::Done => todo!(),
                 _ => Command::none(),
             },
             ItemMessage::Regular(regular_message) => match regular_message {
@@ -82,8 +80,7 @@ impl TodoItemWidget {
 
     fn view_regular(&self) -> Element<RegularMessage> {
         row![
-            checkbox("", self.completed)
-                .on_toggle(move |toggled| RegularMessage::Completed(toggled)),
+            checkbox("", self.completed).on_toggle(RegularMessage::Completed),
             text(&self.name),
             horizontal_space(),
             button("Edit").on_press(RegularMessage::StartEdit),
@@ -96,7 +93,7 @@ impl TodoItemWidget {
         row![
             text_input("", &self.name)
                 .on_input(EditMessage::Name)
-                .on_submit(EditMessage::SubmitName),
+                .on_submit(EditMessage::Done),
             horizontal_space(),
             button("Delete").on_press(EditMessage::Delete),
             button("Done").on_press(EditMessage::Done),
