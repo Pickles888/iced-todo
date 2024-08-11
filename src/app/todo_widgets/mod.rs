@@ -1,7 +1,8 @@
-use filter::Filter;
+use filter::{filter_button, Filter};
 use iced::{
     widget::{
-        button, column, horizontal_space, row, text, Button, Checkbox, Column, Text, TextInput,
+        button, column, horizontal_space, row, text, vertical_space, Button, Checkbox, Column,
+        Text, TextInput,
     },
     Command, Element, Theme,
 };
@@ -21,7 +22,7 @@ pub enum TodoMessage {
     Completed(usize, bool),
     Edit(usize),
     InputEdit(String),
-    Filter(Filter),
+    SetFilter(Filter),
     NewSubmitted,
 }
 
@@ -90,7 +91,11 @@ impl TodoListWidget {
 
                 Command::none()
             }
-            TodoMessage::Filter(_) => todo!(),
+            TodoMessage::SetFilter(filter) => {
+                self.filter = filter;
+
+                Command::none()
+            }
         }
     }
 
@@ -106,11 +111,11 @@ impl TodoListWidget {
             row![input, new_button].spacing(10)
         };
 
-        let todo = {
+        let todo_items = {
             let filtered = self
                 .todo_items
                 .iter()
-                .filter(|item| self.filter.filter(item.clone()))
+                .filter(|item| self.filter.filter(item))
                 .collect::<Vec<_>>();
 
             let _items = filtered
@@ -128,18 +133,25 @@ impl TodoListWidget {
                 .size(30);
             }
 
-            Column::with_children(_items).spacing(10)
+            Column::with_children(_items).spacing(10).padding(5)
         };
 
         let status = {
-            //let filter = row![button("All").]
+            let filter = row![
+                filter_button("All", &self.filter, Filter::All),
+                filter_button("Uncomplete", &self.filter, Filter::Uncomplete),
+                filter_button("Completed", &self.filter, Filter::Completed),
+            ]
+            .spacing(10);
 
-            row![horizontal_space(),]
+            row![horizontal_space(), filter]
         };
 
-        column![title, new_todo, todo, status]
-            .padding(15)
+        let todo = column![title, new_todo, todo_items].spacing(10);
+
+        column![todo, vertical_space(), status]
             .spacing(10)
+            .padding(10)
             .into()
     }
 }

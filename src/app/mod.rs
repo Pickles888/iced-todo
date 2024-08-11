@@ -26,8 +26,7 @@ impl Application for Todo {
     type Theme = Theme;
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
-        let mut test = TodoListWidget::new("Test");
-        test.add("test");
+        let test = TodoListWidget::new("Test");
         (
             Self {
                 lists: vec![test],
@@ -70,13 +69,13 @@ impl Application for Todo {
             .padding(10)
             .width(150),
         );
-        let todo_list = scrollable(
-            self.lists
-                .get(self.list)
-                .unwrap()
-                .view()
-                .map(|message| Message::Item(self.list, message)),
-        );
+
+        let todo_list = self
+            .lists
+            .get(self.list)
+            .unwrap()
+            .view()
+            .map(|message| Message::Item(self.list, message));
 
         row![todo_lists_bar, todo_list].into()
     }
