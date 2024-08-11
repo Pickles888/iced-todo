@@ -3,7 +3,7 @@ use iced::{
     widget::{button, container, row, scrollable, Column},
     Application, Command, Element, Renderer, Theme,
 };
-use todo_widgets::{TodoListWidget, TodoMessage};
+use todo_widgets::{todo_list::TodoListWidget, TodoMessage};
 
 mod icons;
 mod todo_widgets;
