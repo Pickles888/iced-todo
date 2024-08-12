@@ -5,7 +5,7 @@ use iced::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::gui::Message;
+use crate::gui::app::Message;
 
 use super::todo_list::TodoListMessage;
 

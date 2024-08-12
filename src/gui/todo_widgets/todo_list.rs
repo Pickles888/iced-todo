@@ -6,7 +6,7 @@ use iced::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    gui::{colors, filter::Filter, Message},
+    gui::{app::Message, colors, filter::Filter},
     utils::strip_trailing_newline,
 };
 

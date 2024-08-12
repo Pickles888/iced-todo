@@ -1,6 +1,6 @@
 use iced::widget::{button, Button};
 
-use super::{todo_widgets::todo_item::TodoItemWidget, Message, TodoListMessage};
+use super::{app::Message, todo_widgets::todo_item::TodoItemWidget};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Filter {
