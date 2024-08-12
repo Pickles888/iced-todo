@@ -1,4 +1,4 @@
-use gui::Todo;
+use gui::app::Todo;
 use iced::{Application, Settings};
 
 mod gui;

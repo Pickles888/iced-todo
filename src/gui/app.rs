@@ -4,13 +4,12 @@ use super::filter::{filter_button, Filter};
 use super::persistance::{self, PersistError, Persistance};
 use super::todo_widgets::todo_list::{TodoListMessage, TodoListWidget};
 use iced::{
-    alignment, executor,
-    theme::{Button as ButtonTheme, Text},
+    executor,
+    theme::Button as ButtonTheme,
     widget::{
         button, column, container, horizontal_space, row, scrollable, text, text_input,
         vertical_space, Button, Column,
     },
-    window::toggle_maximize,
     Application, Command, Element, Length, Renderer, Theme,
 };
 
@@ -32,11 +31,23 @@ pub enum Message {
     SetFilter(Filter),
     NewListSubmit,
     AddingList,
+    Saved(Result<(), PersistError>),
 }
 
 impl Persistance for Todo {
     fn path() -> Result<PathBuf, PersistError> {
         dirs::config_dir().ok_or(PersistError::Path)
+    }
+}
+
+impl Todo {
+    fn save_update<F>(&self, f: F) -> Command<Message>
+    where
+        F: FnOnce() -> Command<Message>,
+    {
+        // very hacky
+
+        Command::perform(Self::save(self.todo_lists.clone()), Message::Saved)
     }
 }
 
@@ -90,7 +101,7 @@ impl Application for Todo {
                 self.new_list_input = String::new();
                 self.is_adding_list = false;
 
-                Command::none()
+                Command::perform(Self::save(self.todo_lists.clone()), Message::Saved)
             }
             Message::List(list_index, message) => {
                 self.todo_lists.get_mut(list_index).unwrap().update(message)
@@ -102,6 +113,14 @@ impl Application for Todo {
             }
             Message::SetFilter(filter) => {
                 self.filter = filter;
+
+                Command::none()
+            }
+            Message::Saved(result) => {
+                self.status = match result {
+                    Ok(_) => Ok("Saved".to_owned()),
+                    Err(error) => Err(error),
+                };
 
                 Command::none()
             }

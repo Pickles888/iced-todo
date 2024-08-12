@@ -4,7 +4,7 @@ use serde::{de::DeserializeOwned, Serialize};
 use tokio::fs;
 
 pub trait Persistance {
-    async fn save<T: Serialize>(items: &T) -> Result<(), PersistError> {
+    async fn save<T: Serialize>(items: T) -> Result<(), PersistError> {
         let save_string =
             serde_json::to_string(&items).map_err(|_| PersistError::Save(SaveError::Compose))?;
 

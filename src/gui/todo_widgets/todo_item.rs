@@ -28,7 +28,7 @@ pub enum RegularMessage {
     StartEdit,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TodoItemWidget {
     pub completed: bool,
     pub name: String,

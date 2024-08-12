@@ -12,7 +12,7 @@ use crate::{
 
 use super::todo_item::{EditMessage, ItemMessage, TodoItemWidget};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TodoListWidget {
     pub todo_items: Vec<TodoItemWidget>,
     pub name: String,
