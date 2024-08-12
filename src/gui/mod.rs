@@ -1,32 +1,49 @@
+use std::path::PathBuf;
+
+use filter::{filter_button, Filter};
 use iced::{
-    executor,
+    alignment, executor,
     theme::{Button as ButtonTheme, Text},
-    widget::{button, column, container, row, scrollable, text, text_input, Button, Column},
+    widget::{
+        button, column, container, horizontal_space, row, scrollable, text, text_input,
+        vertical_space, Button, Column,
+    },
+    window::toggle_maximize,
     Application, Command, Element, Length, Renderer, Theme,
 };
-use todo_widgets::{todo_list::TodoListWidget, TodoMessage};
+use persistance::{PersistError, Persistance};
+use todo_widgets::todo_list::{TodoListMessage, TodoListWidget};
 
 mod colors;
+mod filter;
 mod icons;
 mod persistance;
 mod todo_widgets;
 
-#[derive(Default)]
 pub struct Todo {
     todo_lists: Vec<TodoListWidget>,
     current_list: Option<usize>,
     new_list_input: String,
     is_adding_list: bool,
     is_dark: bool,
+    status: Result<String, PersistError>,
+    filter: Filter,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
-    List(usize, TodoMessage),
+    List(usize, TodoListMessage),
     ListBarPressed(usize),
     NewListInput(String),
+    SetFilter(Filter),
     NewListSubmit,
     AddingList,
+}
+
+impl Persistance for Todo {
+    fn path() -> Result<PathBuf, PersistError> {
+        dirs::config_dir().ok_or(PersistError::Path)
+    }
 }
 
 impl Application for Todo {
@@ -36,13 +53,21 @@ impl Application for Todo {
     type Theme = Theme;
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
+        // loading is hacky
+        let (todo_lists, error) = match Self::load::<Vec<TodoListWidget>>() {
+            Ok(item) => (item, Ok("Loaded".to_owned())),
+            Err(error) => (Vec::new(), Err(error)),
+        };
+
         (
             Self {
-                todo_lists: Vec::new(),
+                todo_lists,
+                status: error, // maybe update later on to be a message
                 current_list: None,
-                is_dark: true,
-                is_adding_list: false,
                 new_list_input: String::new(),
+                is_adding_list: false,
+                is_dark: true,
+                filter: Filter::All,
             },
             Command::none(),
         )
@@ -81,6 +106,11 @@ impl Application for Todo {
 
                 Command::none()
             }
+            Message::SetFilter(filter) => {
+                self.filter = filter;
+
+                Command::none()
+            }
         }
     }
 
@@ -106,9 +136,17 @@ impl Application for Todo {
                     .width(Length::Fill)
                     .into()
             } else {
-                Button::new(container("+").width(Length::Fill).center_x())
-                    .on_press(Message::AddingList)
-                    .into()
+                Button::new(
+                    container(if self.todo_lists.is_empty() {
+                        "Click me!"
+                    } else {
+                        "+"
+                    })
+                    .width(Length::Fill)
+                    .center_x(),
+                )
+                .on_press(Message::AddingList)
+                .into()
             };
 
             container(scrollable(
@@ -116,20 +154,50 @@ impl Application for Todo {
             ))
         };
 
-        let todo_list: Element<_> = if let Some(current_list) = self.current_list {
-            self.todo_lists
-                .get(current_list)
-                .unwrap()
-                .view()
-                .map(move |message| Message::List(current_list, message))
-        } else {
-            text("Begin by pressing + to add a list")
-                .size(40)
-                .style(Text::Color(colors::text::secondary()))
-                .into()
+        let status = {
+            let persistance_status = text(match &self.status {
+                Ok(message) => message,
+                Err(error) => match error {
+                    PersistError::Save(save_error) => match save_error {
+                        persistance::SaveError::Write => "Failed to write to save file",
+                        persistance::SaveError::Compose => "Failed to compose json data",
+                    },
+                    PersistError::Load(load_error) => match load_error {
+                        persistance::LoadError::Read => "Failed to read config file",
+                        persistance::LoadError::Parse => "Failed to parse config data",
+                    },
+                    PersistError::Path => "Could not get config directory",
+                },
+            })
+            .size(20);
+
+            let filter = row![
+                filter_button("All", &self.filter, Filter::All),
+                filter_button("Uncomplete", &self.filter, Filter::Uncomplete),
+                filter_button("Completed", &self.filter, Filter::Completed),
+            ]
+            .spacing(10);
+
+            row![horizontal_space(), persistance_status, filter]
+                .align_items(iced::Alignment::Center)
+                .spacing(10)
+                .padding(10)
         };
 
-        row![todo_lists_bar, todo_list].into()
+        let main_view: Element<_> = if let Some(current_list) = self.current_list {
+            let lists = self
+                .todo_lists
+                .get(current_list)
+                .unwrap()
+                .view(&self.filter)
+                .map(move |message| Message::List(current_list, message));
+
+            row![todo_lists_bar, lists].into()
+        } else {
+            todo_lists_bar.into()
+        };
+
+        column![main_view, vertical_space(), status].into()
     }
 
     fn theme(&self) -> Theme {

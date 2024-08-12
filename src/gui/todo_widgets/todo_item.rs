@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::gui::Message;
 
-use super::TodoMessage;
+use super::todo_list::TodoListMessage;
 
 #[derive(Debug, Clone)]
 pub enum ItemMessage {
@@ -84,13 +84,13 @@ impl TodoItemWidget {
         }
     }
 
-    pub fn view(&self, index: usize) -> Element<TodoMessage> {
+    pub fn view(&self, index: usize) -> Element<TodoListMessage> {
         if self.editing {
             self.view_edit()
-                .map(move |message| TodoMessage::Item(index, ItemMessage::Edit(message)))
+                .map(move |message| TodoListMessage::Item(index, ItemMessage::Edit(message)))
         } else {
             self.view_regular()
-                .map(move |message| TodoMessage::Item(index, ItemMessage::Regular(message)))
+                .map(move |message| TodoListMessage::Item(index, ItemMessage::Regular(message)))
         }
     }
 

@@ -1,6 +1,6 @@
 use iced::widget::{button, Button};
 
-use super::{todo_item::TodoItemWidget, TodoMessage};
+use super::{todo_widgets::todo_item::TodoItemWidget, Message, TodoListMessage};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Filter {
@@ -29,10 +29,10 @@ pub fn filter_button<'a>(
     name: &'a str,
     current_filter: &'a Filter,
     filter: Filter,
-) -> Button<'a, TodoMessage> {
+) -> Button<'a, Message> {
     button(name).on_press_maybe(if *current_filter == filter {
         None
     } else {
-        Some(TodoMessage::SetFilter(filter))
+        Some(Message::SetFilter(filter))
     })
 }
