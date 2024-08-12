@@ -3,7 +3,9 @@ use iced::{
     Command, Element,
 };
 
-use crate::app::Message;
+use serde::{Deserialize, Serialize};
+
+use crate::gui::Message;
 
 use super::TodoMessage;
 
@@ -26,19 +28,29 @@ pub enum RegularMessage {
     StartEdit,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TodoItemWidget {
     pub completed: bool,
     pub name: String,
+    #[serde(skip)]
     pub editing: bool,
+}
+
+impl Default for TodoItemWidget {
+    fn default() -> Self {
+        Self {
+            completed: false,
+            name: "TodoItem".to_owned(),
+            editing: false,
+        }
+    }
 }
 
 impl TodoItemWidget {
     pub fn new(name: &str) -> Self {
-        TodoItemWidget {
-            completed: false,
+        Self {
             name: name.to_string(),
-            editing: false,
+            ..Self::default()
         }
     }
 
@@ -63,7 +75,11 @@ impl TodoItemWidget {
 
                     Command::none()
                 }
-                RegularMessage::StartEdit => todo!(),
+                RegularMessage::StartEdit => {
+                    self.editing = true;
+
+                    Command::none()
+                }
             },
         }
     }
@@ -94,10 +110,9 @@ impl TodoItemWidget {
             text_input("", &self.name)
                 .on_input(EditMessage::Name)
                 .on_submit(EditMessage::Done),
-            horizontal_space(),
             button("Delete").on_press(EditMessage::Delete),
-            button("Done").on_press(EditMessage::Done),
         ]
+        .spacing(10)
         .into()
     }
 }

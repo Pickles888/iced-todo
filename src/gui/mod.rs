@@ -1,5 +1,5 @@
 use iced::{
-    alignment, executor,
+    executor,
     theme::{Button as ButtonTheme, Text},
     widget::{button, column, container, row, scrollable, text, text_input, Button, Column},
     Application, Command, Element, Length, Renderer, Theme,
@@ -8,6 +8,7 @@ use todo_widgets::{todo_list::TodoListWidget, TodoMessage};
 
 mod colors;
 mod icons;
+mod persistance;
 mod todo_widgets;
 
 #[derive(Default)]

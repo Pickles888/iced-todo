@@ -1,7 +1,7 @@
-use app::Todo;
+use gui::Todo;
 use iced::{Application, Settings};
 
-mod app;
+mod gui;
 mod utils;
 
 fn main() -> iced::Result {

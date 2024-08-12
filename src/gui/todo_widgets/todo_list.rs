@@ -6,9 +6,10 @@ use iced::{
     },
     Command, Element,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    app::{
+    gui::{
         colors,
         todo_widgets::filter::{filter_button, Filter},
         Message,
@@ -21,21 +22,34 @@ use super::{
     ItemMessage, TodoMessage,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TodoListWidget {
     pub todo_items: Vec<TodoItemWidget>,
     pub name: String,
+
+    #[serde(skip)]
     pub input: String,
+
+    #[serde(skip)]
     pub filter: Filter,
+}
+
+impl Default for TodoListWidget {
+    fn default() -> Self {
+        Self {
+            todo_items: Vec::new(),
+            name: "TodoList".to_owned(),
+            input: String::new(),
+            filter: Filter::All,
+        }
+    }
 }
 
 impl TodoListWidget {
     pub fn new(name: &str) -> Self {
-        TodoListWidget {
-            todo_items: Vec::new(),
+        Self {
             name: name.to_string(),
-            input: "".to_owned(),
-            filter: Filter::All,
+            ..Self::default()
         }
     }
 

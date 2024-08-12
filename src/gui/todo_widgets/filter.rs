@@ -9,6 +9,12 @@ pub enum Filter {
     Completed,
 }
 
+impl Default for Filter {
+    fn default() -> Self {
+        Self::All
+    }
+}
+
 impl Filter {
     pub fn filter(&self, todoitem: &TodoItemWidget) -> bool {
         match *self {
