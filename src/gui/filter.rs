@@ -1,6 +1,6 @@
-use iced::widget::{button, Button};
+use iced::widget::{button, container, Button};
 
-use super::{app::Message, todo_widgets::todo_item::TodoItemWidget};
+use super::{app::Message, styling, todo_widgets::todo_item::TodoItemWidget};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Filter {
@@ -30,9 +30,11 @@ pub fn filter_button<'a>(
     current_filter: &'a Filter,
     filter: Filter,
 ) -> Button<'a, Message> {
-    button(name).on_press_maybe(if *current_filter == filter {
-        None
-    } else {
-        Some(Message::SetFilter(filter))
-    })
+    button(container(name).width(100).center_x())
+        .on_press_maybe(if *current_filter == filter {
+            None
+        } else {
+            Some(Message::SetFilter(filter))
+        })
+        .style(styling::button::Button::Rounded)
 }

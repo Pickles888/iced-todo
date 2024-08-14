@@ -1,8 +1,12 @@
 use std::path::PathBuf;
 
+use crate::utils::check_dirty;
+
 use super::filter::{filter_button, Filter};
 use super::persistance::{self, PersistError, Persistance};
+use super::styling;
 use super::todo_widgets::todo_list::{TodoListMessage, TodoListWidget};
+use iced::theme;
 use iced::{
     executor,
     theme::Button as ButtonTheme,
@@ -19,6 +23,7 @@ pub struct Todo {
     new_list_input: String,
     is_adding_list: bool,
     is_dark: bool,
+    is_dirty: bool,
     status: Result<String, PersistError>,
     filter: Filter,
 }
@@ -35,19 +40,11 @@ pub enum Message {
 }
 
 impl Persistance for Todo {
-    fn path() -> Result<PathBuf, PersistError> {
-        dirs::config_dir().ok_or(PersistError::Path)
-    }
-}
+    fn config_path() -> Result<PathBuf, PersistError> {
+        let mut path_buf = dirs::config_dir().ok_or(PersistError::Path)?;
+        path_buf.push("todo_config.json");
 
-impl Todo {
-    fn save_update<F>(&self, f: F) -> Command<Message>
-    where
-        F: FnOnce() -> Command<Message>,
-    {
-        // very hacky
-
-        Command::perform(Self::save(self.todo_lists.clone()), Message::Saved)
+        Ok(path_buf)
     }
 }
 
@@ -72,6 +69,7 @@ impl Application for Todo {
                 new_list_input: String::new(),
                 is_adding_list: false,
                 is_dark: true,
+                is_dirty: false,
                 filter: Filter::All,
             },
             Command::none(),
@@ -79,11 +77,31 @@ impl Application for Todo {
     }
 
     fn title(&self) -> String {
-        String::from("Todo List")
+        let dirty_to_char = |dirty: bool| {
+            if dirty {
+                "*"
+            } else {
+                ""
+            }
+        };
+
+        if let Some(i) = self.current_list {
+            let list = self.todo_lists.get(i).unwrap();
+
+            format!(
+                "Iced Todo{} - {}{}",
+                dirty_to_char(self.is_dirty),
+                list.name,
+                dirty_to_char(list.is_dirty),
+            )
+        } else {
+            format!("Iced Todo{}", dirty_to_char(self.is_dirty))
+        }
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
-        match message {
+        // saving is (kinda) hacky
+        let command = match message {
             Message::ListBarPressed(list_index) => {
                 self.current_list = Some(list_index);
 
@@ -91,6 +109,7 @@ impl Application for Todo {
             }
             Message::NewListInput(input) => {
                 self.new_list_input = input;
+                self.is_dirty = true;
 
                 Command::none()
             }
@@ -100,8 +119,9 @@ impl Application for Todo {
 
                 self.new_list_input = String::new();
                 self.is_adding_list = false;
+                self.is_dirty = true;
 
-                Command::perform(Self::save(self.todo_lists.clone()), Message::Saved)
+                Command::none()
             }
             Message::List(list_index, message) => {
                 self.todo_lists.get_mut(list_index).unwrap().update(message)
@@ -124,6 +144,14 @@ impl Application for Todo {
 
                 Command::none()
             }
+        };
+
+        self.is_dirty = check_dirty(&self.is_dirty, &self.todo_lists, |list| list.is_dirty);
+
+        if self.is_dirty {
+            Command::perform(Self::save(self.todo_lists.clone()), Message::Saved)
+        } else {
+            command
         }
     }
 
@@ -136,7 +164,7 @@ impl Application for Todo {
                     .map(|(index, list)| {
                         button(&*list.name)
                             .on_press(Message::ListBarPressed(index))
-                            .style(ButtonTheme::Text)
+                            .style(styling::button::Button::Text)
                             .into()
                     })
                     .collect::<Vec<_>>(),
@@ -162,12 +190,17 @@ impl Application for Todo {
                 .into()
             };
 
-            container(scrollable(
-                column![add_new, lists].padding(10).spacing(15).width(150),
-            ))
+            container(
+                container(scrollable(
+                    column![add_new, lists].padding(10).spacing(15).width(175),
+                ))
+                .style(styling::container::Container),
+            )
+            .padding(10)
         };
 
         let status = {
+            // try to put this in update in the future
             let persistance_status = text(match &self.status {
                 Ok(message) => message,
                 Err(error) => match error {
@@ -191,7 +224,7 @@ impl Application for Todo {
             ]
             .spacing(10);
 
-            row![horizontal_space(), persistance_status, filter]
+            row![persistance_status, horizontal_space(), filter]
                 .align_items(iced::Alignment::Center)
                 .spacing(10)
                 .padding(10)

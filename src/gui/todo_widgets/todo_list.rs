@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     gui::{app::Message, colors, filter::Filter},
-    utils::strip_trailing_newline,
+    utils::{check_dirty, strip_trailing_newline},
 };
 
 use super::todo_item::{EditMessage, ItemMessage, TodoItemWidget};
@@ -19,6 +19,9 @@ pub struct TodoListWidget {
 
     #[serde(skip)]
     pub input: String,
+
+    #[serde(skip)]
+    pub is_dirty: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -34,6 +37,7 @@ impl Default for TodoListWidget {
             todo_items: Vec::new(),
             name: "TodoList".to_owned(),
             input: String::new(),
+            is_dirty: false,
         }
     }
 }
@@ -51,9 +55,11 @@ impl TodoListWidget {
     }
 
     pub fn update(&mut self, message: TodoListMessage) -> Command<Message> {
-        match message {
+        let command = match message {
             TodoListMessage::InputEdit(action) => {
                 self.input = action;
+
+                self.is_dirty = true;
 
                 Command::none()
             }
@@ -64,17 +70,25 @@ impl TodoListWidget {
                     self.input = "".to_owned();
                 }
 
+                self.is_dirty = true;
+
                 Command::none()
             }
             TodoListMessage::Item(index, item_message) => match item_message {
                 ItemMessage::Edit(EditMessage::Delete) => {
                     self.todo_items.remove(index);
 
+                    self.is_dirty = true;
+
                     Command::none()
                 }
                 _ => self.todo_items.get_mut(index).unwrap().update(item_message),
             },
-        }
+        };
+
+        self.is_dirty = check_dirty(&self.is_dirty, &self.todo_items, |item| item.is_dirty);
+
+        command
     }
 
     pub fn view(&self, filter: &Filter) -> Element<TodoListMessage> {

@@ -18,7 +18,9 @@ pub fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
     (bytes_vec[0], bytes_vec[1], bytes_vec[2])
 }
 
-pub fn save<T: Serialize>(item: &T) -> Result<(), serde_json::Error> {
-    serde_json::to_string(&item)?;
-    Ok(())
+pub fn check_dirty<T, F>(current_val: &bool, items: &[T], check_fn: F) -> bool
+where
+    F: FnMut(&T) -> bool,
+{
+    *current_val || items.iter().all(check_fn)
 }

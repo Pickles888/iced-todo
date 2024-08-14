@@ -32,8 +32,12 @@ pub enum RegularMessage {
 pub struct TodoItemWidget {
     pub completed: bool,
     pub name: String,
+
     #[serde(skip)]
     pub editing: bool,
+
+    #[serde(skip)]
+    pub is_dirty: bool,
 }
 
 impl Default for TodoItemWidget {
@@ -42,6 +46,7 @@ impl Default for TodoItemWidget {
             completed: false,
             name: "TodoItem".to_owned(),
             editing: false,
+            is_dirty: false,
         }
     }
 }
@@ -59,11 +64,13 @@ impl TodoItemWidget {
             ItemMessage::Edit(edit_message) => match edit_message {
                 EditMessage::Name(name) => {
                     self.name = name;
+                    self.is_dirty = true;
 
                     Command::none()
                 }
                 EditMessage::Done => {
                     self.editing = false;
+                    self.is_dirty = true;
 
                     Command::none()
                 }
@@ -72,6 +79,7 @@ impl TodoItemWidget {
             ItemMessage::Regular(regular_message) => match regular_message {
                 RegularMessage::Completed(completed) => {
                     self.completed = completed;
+                    self.is_dirty = true;
 
                     Command::none()
                 }

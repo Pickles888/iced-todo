@@ -2,22 +2,77 @@ use iced::Color;
 
 use crate::utils::hex_to_rgb;
 
+pub fn no_color() -> Color {
+    Color {
+        r: 0.0,
+        g: 0.0,
+        b: 0.0,
+        a: 0.0,
+    }
+}
+
 pub mod text {
     use iced::Color;
 
     use super::hex_to_color;
 
-    pub fn primary() -> iced::Color {
-        iced::Color {
-            r: 198.0,
-            g: 208.0,
-            b: 245.0,
-            a: 255.0,
-        }
+    pub fn primary() -> Color {
+        hex_to_color("c6d0f5")
     }
 
     pub fn secondary() -> Color {
         hex_to_color("a5adce")
+    }
+
+    pub fn black() -> Color {
+        hex_to_color("232634")
+    }
+}
+
+pub mod accents {
+    use iced::Color;
+
+    use super::hex_to_color;
+
+    pub fn primary() -> Color {
+        hex_to_color("f4b8e4") // pink
+    }
+
+    pub fn secondary() -> Color {
+        hex_to_color("babbf1") // lavender
+    }
+
+    pub fn danger() -> Color {
+        hex_to_color("e78284") // red
+    }
+
+    pub fn surface() -> Color {
+        hex_to_color("414559") // surface 0
+    }
+}
+
+pub mod container {
+    pub mod with_background {
+        use iced::Color;
+
+        use crate::gui::colors::hex_to_color;
+
+        pub fn background() -> Color {
+            hex_to_color("414559")
+        }
+
+        pub fn midground() -> Color {
+            hex_to_color("51576d")
+        }
+
+        pub fn border() -> Color {
+            Color {
+                r: 0.0,
+                g: 0.0,
+                b: 0.0,
+                a: 0.0,
+            }
+        }
     }
 }
 

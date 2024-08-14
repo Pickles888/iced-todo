@@ -1,23 +1,26 @@
 use std::{fs as std_fs, path::PathBuf};
 
+use async_std::fs;
 use serde::{de::DeserializeOwned, Serialize};
-use tokio::fs;
 
 pub trait Persistance {
     async fn save<T: Serialize>(items: T) -> Result<(), PersistError> {
         let save_string =
             serde_json::to_string(&items).map_err(|_| PersistError::Save(SaveError::Compose))?;
 
-        fs::write(Self::path()?, save_string)
+        fs::write(Self::config_path()?, save_string)
             .await
             .map_err(|_| PersistError::Save(SaveError::Write))?;
+
+        async_std::task::sleep(std::time::Duration::from_secs(2)).await; // hacky way to not save
+                                                                         // constantly
 
         Ok(())
     }
 
     fn load<T: DeserializeOwned>() -> Result<T, PersistError> {
         let load_bytes =
-            std_fs::read(Self::path()?).map_err(|_| PersistError::Load(LoadError::Read))?;
+            std_fs::read(Self::config_path()?).map_err(|_| PersistError::Load(LoadError::Read))?;
 
         let loaded: T = serde_json::from_slice(&load_bytes)
             .map_err(|_| PersistError::Load(LoadError::Parse))?;
@@ -25,8 +28,8 @@ pub trait Persistance {
         Ok(loaded)
     }
 
-    async fn load_async<T: DeserializeOwned>() -> Result<T, PersistError> {
-        let load_bytes = fs::read(Self::path()?)
+    async fn _load_async<T: DeserializeOwned>() -> Result<T, PersistError> {
+        let load_bytes = fs::read(Self::config_path()?)
             .await
             .map_err(|_| PersistError::Load(LoadError::Read))?;
 
@@ -36,7 +39,7 @@ pub trait Persistance {
         Ok(loaded)
     }
 
-    fn path() -> Result<PathBuf, PersistError>;
+    fn config_path() -> Result<PathBuf, PersistError>;
 }
 
 #[derive(Debug, Clone)]
