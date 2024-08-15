@@ -1,6 +1,4 @@
 :crab: :clipboard: :ice_cube:
-# Preview
-todo
 # Resources
 - [iced-rs](https://iced.rs/)
   - [iced-rs discord](https://discord.gg/3xZJ65GAhd)
