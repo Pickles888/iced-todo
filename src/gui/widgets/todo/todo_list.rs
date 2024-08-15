@@ -6,7 +6,11 @@ use iced::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    gui::{app::Message, styling::colors, widgets::filter::Filter},
+    gui::{
+        app::Message,
+        styling::{self, colors},
+        widgets::filter::Filter,
+    },
     utils::{check_dirty, strip_trailing_newline},
 };
 
@@ -98,7 +102,8 @@ impl TodoList {
 
         let new_todo = text_input("Input Todo", &self.input)
             .on_input(TodoListMessage::InputEdit)
-            .on_submit(TodoListMessage::NewSubmitted);
+            .on_submit(TodoListMessage::NewSubmitted)
+            .style(styling::text_input::TextInput);
 
         let todo_items: Element<_> = {
             let filtered = self

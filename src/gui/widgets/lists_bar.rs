@@ -70,6 +70,7 @@ impl Todo {
                     NewListMessage::Submit,
                 )))
                 .width(Length::Fill)
+                .style(styling::text_input::TextInput)
                 .into()
         } else {
             Button::new(
@@ -146,7 +147,8 @@ impl TodoList {
     fn view_edit(&self) -> Element<EditMessage> {
         let name_edit = text_input("", &self.name)
             .on_input(EditMessage::Name)
-            .on_submit(EditMessage::Done);
+            .on_submit(EditMessage::Done)
+            .style(styling::text_input::TextInput);
         let delete = button("Delete")
             .on_press(EditMessage::Delete)
             .style(styling::button::Button::DangerText);
