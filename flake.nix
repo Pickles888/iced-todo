@@ -1,40 +1,44 @@
 {
-  description = "Example Rust development environment for Zero to Nix";
+  description = "Todo list app made in iced";
 
-  # Flake inputs
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    rust-overlay.url = "github:oxalica/rust-overlay";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+
+    naersk = {
+      url = "github:nix-community/naersk";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = {
-    self,
-    nixpkgs,
-    rust-overlay,
-  }: let
-    allSystems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
+  outputs = { self, flake-utils, naersk, nixpkgs }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = (import nixpkgs) {
+          inherit system;
+        };
 
-    forAllSystems = f:
-      nixpkgs.lib.genAttrs allSystems
-      (system: f {pkgs = import nixpkgs {inherit system;};});
-  in {
-    devShells = forAllSystems ({pkgs}: {
-      default = pkgs.mkShell {
-        packages =
-          (with pkgs; [rustup])
-          ++ pkgs.lib.optionals pkgs.stdenv.isDarwin
-          (with pkgs; [libiconv]);
-        shellHook = "zsh && exit";
-	WINIT_UNIX_BACKEND = "wayland";
-	LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${ with pkgs; lib.makeLibraryPath [
-	  wayland
-	  libGL
-	  vulkan-loader
-	  vulkan-headers
-	  libxkbcommon
-	  fontconfig
-	] }";
+	naersk' = pkgs.callPackage naersk {};
+      in {
+        defaultPackage = naersk'.buildPackage {
+          src = ./.;
+        };
+
+        devShell = pkgs.mkShell {
+          packages = 
+	    (with pkgs; [rustup])
+	    ++ pkgs.lib.optionals pkgs.stdenv.isDarwin
+	    (with pkgs; [libiconv]);
+	  shellHook = "zsh && exit";
+	  WINIT_UNIX_BACKEND = "wayland";
+	  LD_LIBRARY_PATH = "$LD_LIBRARY_PATH:${ with pkgs; lib.makeLibraryPath [
+	    wayland
+	    libGL
+	    vulkan-loader
+	    vulkan-headers
+	    libxkbcommon
+	    fontconfig
+	  ]}";
       };
     });
-  };
 }
