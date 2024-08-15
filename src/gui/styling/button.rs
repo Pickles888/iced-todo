@@ -12,6 +12,7 @@ pub enum Button {
     Text,
     DangerText,
     TextSelected,
+    TextSecondary,
 }
 
 impl From<Button> for iced::theme::Button {
@@ -34,6 +35,12 @@ impl button::StyleSheet for Button {
             Button::Text => button::Appearance {
                 background: None,
                 text_color: colors::accents::primary(),
+                border: no_border(0),
+                ..Default::default()
+            },
+            Button::TextSecondary => button::Appearance {
+                background: None,
+                text_color: colors::accents::secondary(),
                 border: no_border(0),
                 ..Default::default()
             },
@@ -73,22 +80,25 @@ impl button::StyleSheet for Button {
     fn disabled(&self, style: &Self::Style) -> button::Appearance {
         let active = self.active(style);
 
-        button::Appearance {
-            shadow_offset: iced::Vector::default(),
-            background: active.background.map(|background| match background {
-                iced::Background::Color(color) => iced::Background::Color(iced::Color {
-                    a: color.a * 0.5,
-                    ..color
+        match self {
+            Self::Text => active,
+            _ => button::Appearance {
+                shadow_offset: iced::Vector::default(),
+                background: active.background.map(|background| match background {
+                    iced::Background::Color(color) => iced::Background::Color(iced::Color {
+                        a: color.a * 0.5,
+                        ..color
+                    }),
+                    iced::Background::Gradient(gradient) => {
+                        iced::Background::Gradient(gradient.mul_alpha(0.5))
+                    }
                 }),
-                iced::Background::Gradient(gradient) => {
-                    iced::Background::Gradient(gradient.mul_alpha(0.5))
-                }
-            }),
-            text_color: iced::Color {
-                a: active.text_color.a * 0.5,
-                ..active.text_color
+                text_color: iced::Color {
+                    a: active.text_color.a * 0.5,
+                    ..active.text_color
+                },
+                ..active
             },
-            ..active
         }
     }
 }

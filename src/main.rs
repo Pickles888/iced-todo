@@ -9,9 +9,12 @@ const SIDEBAR_WIDTH: u16 = 200;
 fn main() -> iced::Result {
     Todo::run(Settings {
         default_font: Font::with_name("Montserrat"),
-        fonts: vec![include_bytes!("../fonts/Montserrat-SemiBold.ttf")
-            .as_slice()
-            .into()],
+        fonts: vec![
+            include_bytes!("../fonts/Montserrat-SemiBold.ttf")
+                .as_slice()
+                .into(),
+            include_bytes!("../fonts/todo-icons.ttf").as_slice().into(),
+        ],
         ..Settings::default()
     })
 }

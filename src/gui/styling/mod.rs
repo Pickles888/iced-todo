@@ -1,6 +1,7 @@
 use iced::{border::Radius, Border, Shadow, Vector};
 
 pub mod button;
+pub mod checkbox;
 pub mod colors;
 pub mod container;
 pub mod text_input;

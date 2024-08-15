@@ -158,12 +158,14 @@ impl Application for Todo {
                 },
                 ListsBarMessage::NewList(new_list_message) => match new_list_message {
                     NewListMessage::Submit => {
-                        self.todo_lists
-                            .push(TodoList::new(&self.lists_bar.new_list_input));
+                        if !&self.lists_bar.new_list_input.is_empty() {
+                            self.todo_lists
+                                .push(TodoList::new(&self.lists_bar.new_list_input));
+
+                            self.is_dirty = true;
+                        }
 
                         self.lists_bar.is_adding_list = false;
-
-                        self.is_dirty = true;
 
                         Command::none()
                     }

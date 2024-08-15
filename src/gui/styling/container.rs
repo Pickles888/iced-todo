@@ -9,7 +9,12 @@ use crate::gui::styling::colors::{self, container::with_background};
 use super::ROUNDING;
 
 #[derive(Default)]
-pub struct Container;
+pub enum Container {
+    #[default]
+    ListsBar,
+
+    CurrentItem,
+}
 
 impl From<Container> for iced::theme::Container {
     fn from(val: Container) -> Self {
@@ -23,14 +28,25 @@ impl container::StyleSheet for Container {
     fn appearance(&self, style: &Self::Style) -> container::Appearance {
         let _palette = style.palette();
 
-        container::Appearance {
-            background: Some(Background::Color(with_background::background())),
-            border: Border {
-                color: colors::container::with_background::border(),
-                radius: Radius::from(ROUNDING),
+        match self {
+            Container::ListsBar => container::Appearance {
+                background: Some(Background::Color(with_background::background())),
+                border: Border {
+                    color: colors::container::with_background::border(),
+                    radius: Radius::from(ROUNDING),
+                    ..Default::default()
+                },
                 ..Default::default()
             },
-            ..Default::default()
+            Container::CurrentItem => container::Appearance {
+                background: Some(Background::Color(with_background::midground())),
+                border: Border {
+                    color: colors::container::with_background::border(),
+                    radius: Radius::from(ROUNDING),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
         }
     }
 }

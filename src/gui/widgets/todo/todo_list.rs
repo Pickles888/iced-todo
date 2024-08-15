@@ -135,7 +135,7 @@ impl TodoList {
                 .padding(10)
                 .into()
             } else {
-                scrollable(Column::with_children(items).spacing(10).padding(5)).into()
+                scrollable(Column::with_children(items).spacing(10).padding(10)).into()
             }
         };
 

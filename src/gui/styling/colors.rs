@@ -39,7 +39,7 @@ pub mod accents {
     }
 
     pub fn secondary() -> Color {
-        hex_to_color("babbf1") // lavender
+        hex_to_color("ca9ee6") // mauve
     }
 
     pub fn danger() -> Color {

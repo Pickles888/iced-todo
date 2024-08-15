@@ -5,7 +5,7 @@ use iced::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::gui::app::Message;
+use crate::gui::{app::Message, icons::IconType, styling};
 
 use super::todo_list::TodoListMessage;
 
@@ -104,10 +104,14 @@ impl TodoItem {
 
     fn view_regular(&self) -> Element<RegularMessage> {
         row![
-            checkbox("", self.completed).on_toggle(RegularMessage::Completed),
+            checkbox("", self.completed)
+                .on_toggle(RegularMessage::Completed)
+                .style(styling::checkbox::Checkbox),
             text(&self.name),
             horizontal_space(),
-            button("Edit").on_press(RegularMessage::StartEdit),
+            button(IconType::Edit.get_text())
+                .on_press(RegularMessage::StartEdit)
+                .style(styling::button::Button::TextSecondary),
         ]
         .align_items(iced::Alignment::Center)
         .into()
@@ -117,9 +121,11 @@ impl TodoItem {
         row![
             text_input("", &self.name)
                 .on_input(EditMessage::Name)
-                .on_submit(EditMessage::Done),
-            button("Delete").on_press(EditMessage::Delete),
-            button("Done").on_press(EditMessage::Done),
+                .on_submit(EditMessage::Done)
+                .style(styling::text_input::TextInput),
+            button(IconType::Delete.get_text())
+                .on_press(EditMessage::Delete)
+                .style(styling::button::Button::DangerText),
         ]
         .spacing(10)
         .into()

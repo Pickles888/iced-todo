@@ -11,6 +11,7 @@ use iced::{
 use crate::{
     gui::{
         app::{Message, Todo},
+        icons::IconType,
         styling,
     },
     SIDEBAR_WIDTH,
@@ -100,12 +101,11 @@ impl Todo {
         container(
             container(scrollable(
                 column![add_new, lists]
-                    .align_items(Alignment::Start)
                     .padding(15)
                     .spacing(15)
                     .width(SIDEBAR_WIDTH),
             ))
-            .style(styling::container::Container)
+            .style(styling::container::Container::ListsBar)
             .height(Length::Fill),
         )
         .padding(10)
@@ -115,15 +115,13 @@ impl Todo {
 
 impl TodoList {
     pub fn view_bar_current(&self, is_editing: bool, index: usize) -> Element<ListsBarMessage> {
-        container(if is_editing {
+        if is_editing {
             self.view_edit()
                 .map(move |message| ListsBarMessage::Edit(index, message))
         } else {
             self.view_regular()
                 .map(move |message| ListsBarMessage::Regular(index, message))
-        })
-        .style(styling::container::Container)
-        .into()
+        }
     }
 
     pub fn view_bar(&self, index: usize) -> Element<ListsBarMessage> {
@@ -134,10 +132,10 @@ impl TodoList {
     }
 
     fn view_regular(&self) -> Element<RegularMessage> {
-        let name = text(&self.name);
-        let edit_button = button("Edit")
+        let name = button(&*self.name).style(styling::button::Button::Text);
+        let edit_button = button(IconType::Edit.get_text())
             .on_press(RegularMessage::StartEdit)
-            .style(styling::button::Button::Text);
+            .style(styling::button::Button::TextSecondary);
 
         row![name, horizontal_space(), edit_button]
             .align_items(Alignment::Center)
@@ -149,7 +147,7 @@ impl TodoList {
             .on_input(EditMessage::Name)
             .on_submit(EditMessage::Done)
             .style(styling::text_input::TextInput);
-        let delete = button("Delete")
+        let delete = button(IconType::Delete.get_text())
             .on_press(EditMessage::Delete)
             .style(styling::button::Button::DangerText);
 
