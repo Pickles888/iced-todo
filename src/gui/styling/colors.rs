@@ -46,10 +46,6 @@ pub mod accents {
         hex_to_color("e78284") // red
     }
 
-    pub fn surface() -> Color {
-        hex_to_color("414559") // surface 0
-    }
-
     pub fn bg() -> Color {
         hex_to_color("292c3c") // mantle
     }
