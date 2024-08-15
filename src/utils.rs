@@ -22,5 +22,5 @@ pub fn check_dirty<T, F>(current_val: &bool, items: &[T], check_fn: F) -> bool
 where
     F: FnMut(&T) -> bool,
 {
-    *current_val || items.iter().all(check_fn)
+    *current_val || items.iter().any(check_fn)
 }

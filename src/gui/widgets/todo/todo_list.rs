@@ -6,15 +6,15 @@ use iced::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    gui::{app::Message, colors, filter::Filter},
+    gui::{app::Message, styling::colors, widgets::filter::Filter},
     utils::{check_dirty, strip_trailing_newline},
 };
 
-use super::todo_item::{EditMessage, ItemMessage, TodoItemWidget};
+use super::todo_item::{EditMessage, ItemMessage, TodoItem};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TodoListWidget {
-    pub todo_items: Vec<TodoItemWidget>,
+pub struct TodoList {
+    pub todo_items: Vec<TodoItem>,
     pub name: String,
 
     #[serde(skip)]
@@ -22,6 +22,9 @@ pub struct TodoListWidget {
 
     #[serde(skip)]
     pub is_dirty: bool,
+
+    #[serde(skip)]
+    pub is_editing: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -31,18 +34,19 @@ pub enum TodoListMessage {
     NewSubmitted,
 }
 
-impl Default for TodoListWidget {
+impl Default for TodoList {
     fn default() -> Self {
         Self {
             todo_items: Vec::new(),
             name: "TodoList".to_owned(),
             input: String::new(),
             is_dirty: false,
+            is_editing: false,
         }
     }
 }
 
-impl TodoListWidget {
+impl TodoList {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -51,15 +55,13 @@ impl TodoListWidget {
     }
 
     pub fn add(&mut self, name: &str) {
-        self.todo_items.push(TodoItemWidget::new(name));
+        self.todo_items.push(TodoItem::new(name));
     }
 
     pub fn update(&mut self, message: TodoListMessage) -> Command<Message> {
         let command = match message {
             TodoListMessage::InputEdit(action) => {
                 self.input = action;
-
-                self.is_dirty = true;
 
                 Command::none()
             }

@@ -1,6 +1,6 @@
 use iced::{border::Radius, Border, Shadow, Vector};
 
-use super::colors;
+pub mod colors;
 
 fn no_shadow() -> Shadow {
     Shadow {
@@ -31,7 +31,7 @@ pub mod container {
         Background, Border,
     };
 
-    use crate::gui::colors::{self, container::with_background};
+    use crate::gui::styling::colors::{self, container::with_background};
 
     use super::ROUNDING;
 
@@ -66,7 +66,7 @@ pub mod container {
 pub mod button {
     use iced::{widget::button, Background};
 
-    use crate::gui::colors;
+    use crate::gui::styling::colors;
 
     use super::{no_border, ROUNDING};
 

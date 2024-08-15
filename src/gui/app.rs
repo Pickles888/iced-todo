@@ -1,11 +1,15 @@
 use std::path::PathBuf;
+use std::ptr::hash;
 
 use crate::utils::check_dirty;
 
-use super::filter::{filter_button, Filter};
 use super::persistance::{self, PersistError, Persistance};
 use super::styling;
-use super::todo_widgets::todo_list::{TodoListMessage, TodoListWidget};
+use super::widgets::filter::{filter_button, Filter};
+use super::widgets::lists_bar::{
+    EditMessage, ListsBar, ListsBarMessage, NewListMessage, RegularMessage,
+};
+use super::widgets::todo::todo_list::{TodoList, TodoListMessage};
 use iced::theme;
 use iced::{
     executor,
@@ -18,25 +22,21 @@ use iced::{
 };
 
 pub struct Todo {
-    todo_lists: Vec<TodoListWidget>,
-    current_list: Option<usize>,
-    new_list_input: String,
-    is_adding_list: bool,
+    pub todo_lists: Vec<TodoList>,
     is_dark: bool,
     is_dirty: bool,
+    pub current_list: Option<usize>,
     status: Result<String, PersistError>,
     filter: Filter,
+    pub lists_bar: ListsBar,
 }
 
 #[derive(Debug, Clone)]
 pub enum Message {
     List(usize, TodoListMessage),
-    ListBarPressed(usize),
-    NewListInput(String),
     SetFilter(Filter),
-    NewListSubmit,
-    AddingList,
     Saved(Result<(), PersistError>),
+    ListsBar(ListsBarMessage),
 }
 
 impl Persistance for Todo {
@@ -56,7 +56,7 @@ impl Application for Todo {
 
     fn new(_flags: ()) -> (Self, Command<Self::Message>) {
         // loading is hacky
-        let (todo_lists, error) = match Self::load::<Vec<TodoListWidget>>() {
+        let (todo_lists, error) = match Self::load::<Vec<TodoList>>() {
             Ok(item) => (item, Ok("Loaded".to_owned())),
             Err(error) => (Vec::new(), Err(error)),
         };
@@ -66,11 +66,10 @@ impl Application for Todo {
                 todo_lists,
                 status: error, // maybe update later on to be a message
                 current_list: None,
-                new_list_input: String::new(),
-                is_adding_list: false,
                 is_dark: true,
                 is_dirty: false,
                 filter: Filter::All,
+                lists_bar: ListsBar::new(),
             },
             Command::none(),
         )
@@ -86,7 +85,7 @@ impl Application for Todo {
         };
 
         if let Some(i) = self.current_list {
-            let list = self.todo_lists.get(i).unwrap();
+            let list = self.todo_lists.get(i).unwrap(); // sometimes gets called while the
 
             format!(
                 "Iced Todo{} - {}{}",
@@ -102,48 +101,89 @@ impl Application for Todo {
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
         // saving is (kinda) hacky
         let command = match message {
-            Message::ListBarPressed(list_index) => {
-                self.current_list = Some(list_index);
-
-                Command::none()
-            }
-            Message::NewListInput(input) => {
-                self.new_list_input = input;
-                self.is_dirty = true;
-
-                Command::none()
-            }
-            Message::NewListSubmit => {
-                self.todo_lists
-                    .push(TodoListWidget::new(&self.new_list_input));
-
-                self.new_list_input = String::new();
-                self.is_adding_list = false;
-                self.is_dirty = true;
-
-                Command::none()
-            }
-            Message::List(list_index, message) => {
-                self.todo_lists.get_mut(list_index).unwrap().update(message)
-            }
-            Message::AddingList => {
-                self.is_adding_list = true;
-
-                Command::none()
-            }
             Message::SetFilter(filter) => {
                 self.filter = filter;
 
                 Command::none()
             }
             Message::Saved(result) => {
+                let total_items = self.get_total_items();
+
                 self.status = match result {
-                    Ok(_) => Ok("Saved".to_owned()),
+                    Ok(_) => Ok(format!(
+                        "{} thing{} todo",
+                        total_items,
+                        if total_items != 1 { "s" } else { "" }
+                    )),
                     Err(error) => Err(error),
                 };
 
                 Command::none()
             }
+            Message::List(list_index, message) => {
+                self.todo_lists.get_mut(list_index).unwrap().update(message)
+            }
+            Message::SetFilter(filter) => {
+                self.filter = filter;
+
+                Command::none()
+            }
+            Message::ListsBar(list_bar_message) => match list_bar_message {
+                ListsBarMessage::Edit(index, edit_message) => match edit_message {
+                    EditMessage::Name(edit) => {
+                        self.todo_lists[index].name = edit;
+
+                        Command::none()
+                    }
+                    EditMessage::Delete => {
+                        self.todo_lists.remove(index);
+                        self.current_list = None;
+                        self.is_dirty = true;
+
+                        Command::none()
+                    }
+                    EditMessage::Done => {
+                        self.todo_lists[index].is_editing = false;
+                        self.is_dirty = true;
+
+                        Command::none()
+                    }
+                },
+                ListsBarMessage::Regular(index, regular_message) => match regular_message {
+                    RegularMessage::StartEdit => {
+                        self.todo_lists[index].is_editing = true;
+
+                        Command::none()
+                    }
+                },
+                ListsBarMessage::NewList(new_list_message) => match new_list_message {
+                    NewListMessage::Submit => {
+                        self.todo_lists
+                            .push(TodoList::new(&self.lists_bar.new_list_input));
+
+                        self.lists_bar.is_adding_list = false;
+
+                        self.is_dirty = true;
+
+                        Command::none()
+                    }
+                    NewListMessage::Input(edit) => {
+                        self.lists_bar.new_list_input = edit;
+
+                        Command::none()
+                    }
+                },
+                ListsBarMessage::Select(index) => {
+                    self.current_list = Some(index);
+
+                    Command::none()
+                }
+                ListsBarMessage::AddingList => {
+                    self.lists_bar.is_adding_list = true;
+
+                    Command::none()
+                }
+            },
         };
 
         self.is_dirty = check_dirty(&self.is_dirty, &self.todo_lists, |list| list.is_dirty);
@@ -156,48 +196,7 @@ impl Application for Todo {
     }
 
     fn view(&self) -> Element<'_, Self::Message, Self::Theme, Renderer> {
-        let todo_lists_bar = {
-            let lists: Column<_> = Column::with_children(
-                self.todo_lists
-                    .iter()
-                    .enumerate()
-                    .map(|(index, list)| {
-                        button(&*list.name)
-                            .on_press(Message::ListBarPressed(index))
-                            .style(styling::button::Button::Text)
-                            .into()
-                    })
-                    .collect::<Vec<_>>(),
-            );
-
-            let add_new: Element<_> = if self.is_adding_list {
-                text_input("Add a todo list", &self.new_list_input)
-                    .on_input(Message::NewListInput)
-                    .on_submit(Message::NewListSubmit)
-                    .width(Length::Fill)
-                    .into()
-            } else {
-                Button::new(
-                    container(if self.todo_lists.is_empty() {
-                        "Click me!"
-                    } else {
-                        "+"
-                    })
-                    .width(Length::Fill)
-                    .center_x(),
-                )
-                .on_press(Message::AddingList)
-                .into()
-            };
-
-            container(
-                container(scrollable(
-                    column![add_new, lists].padding(10).spacing(15).width(175),
-                ))
-                .style(styling::container::Container),
-            )
-            .padding(10)
-        };
+        let todo_lists_bar: Element<_> = self.lists_bar();
 
         let status = {
             // try to put this in update in the future
@@ -240,10 +239,10 @@ impl Application for Todo {
 
             row![todo_lists_bar, lists].into()
         } else {
-            todo_lists_bar.into()
+            todo_lists_bar
         };
 
-        column![main_view, vertical_space(), status].into()
+        column![main_view, status].into()
     }
 
     fn theme(&self) -> Theme {
@@ -252,5 +251,17 @@ impl Application for Todo {
         } else {
             Theme::CatppuccinLatte
         }
+    }
+}
+
+impl Todo {
+    fn get_total_items(&self) -> u64 {
+        let mut i = 0;
+
+        for list in &self.todo_lists {
+            i += list.todo_items.len();
+        }
+
+        i.try_into().unwrap()
     }
 }

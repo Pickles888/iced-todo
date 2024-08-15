@@ -55,7 +55,7 @@ pub mod container {
     pub mod with_background {
         use iced::Color;
 
-        use crate::gui::colors::hex_to_color;
+        use crate::gui::styling::colors::hex_to_color;
 
         pub fn background() -> Color {
             hex_to_color("414559")

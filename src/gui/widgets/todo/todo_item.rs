@@ -9,6 +9,18 @@ use crate::gui::app::Message;
 
 use super::todo_list::TodoListMessage;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TodoItem {
+    pub completed: bool,
+    pub name: String,
+
+    #[serde(skip)]
+    pub editing: bool,
+
+    #[serde(skip)]
+    pub is_dirty: bool,
+}
+
 #[derive(Debug, Clone)]
 pub enum ItemMessage {
     Edit(EditMessage),
@@ -28,19 +40,7 @@ pub enum RegularMessage {
     StartEdit,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TodoItemWidget {
-    pub completed: bool,
-    pub name: String,
-
-    #[serde(skip)]
-    pub editing: bool,
-
-    #[serde(skip)]
-    pub is_dirty: bool,
-}
-
-impl Default for TodoItemWidget {
+impl Default for TodoItem {
     fn default() -> Self {
         Self {
             completed: false,
@@ -51,7 +51,7 @@ impl Default for TodoItemWidget {
     }
 }
 
-impl TodoItemWidget {
+impl TodoItem {
     pub fn new(name: &str) -> Self {
         Self {
             name: name.to_string(),
@@ -119,6 +119,7 @@ impl TodoItemWidget {
                 .on_input(EditMessage::Name)
                 .on_submit(EditMessage::Done),
             button("Delete").on_press(EditMessage::Delete),
+            button("Done").on_press(EditMessage::Done),
         ]
         .spacing(10)
         .into()

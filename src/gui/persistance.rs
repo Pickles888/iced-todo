@@ -12,9 +12,6 @@ pub trait Persistance {
             .await
             .map_err(|_| PersistError::Save(SaveError::Write))?;
 
-        async_std::task::sleep(std::time::Duration::from_secs(2)).await; // hacky way to not save
-                                                                         // constantly
-
         Ok(())
     }
 

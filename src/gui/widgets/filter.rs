@@ -1,6 +1,8 @@
 use iced::widget::{button, container, Button};
 
-use super::{app::Message, styling, todo_widgets::todo_item::TodoItemWidget};
+use crate::gui::{app::Message, styling};
+
+use super::todo::todo_item::TodoItem;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Filter {
@@ -16,7 +18,7 @@ impl Default for Filter {
 }
 
 impl Filter {
-    pub fn filter(&self, todoitem: &TodoItemWidget) -> bool {
+    pub fn filter(&self, todoitem: &TodoItem) -> bool {
         match *self {
             Filter::All => true,
             Filter::Uncomplete => !todoitem.completed,
