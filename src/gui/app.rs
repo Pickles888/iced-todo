@@ -33,7 +33,7 @@ pub enum Message {
 impl Persistance for Todo {
     fn config_path() -> Result<PathBuf, PersistError> {
         let mut path_buf = dirs::config_dir().ok_or(PersistError::Path)?;
-        path_buf.push("todo_config.json");
+        path_buf.push("todo_save.json");
 
         Ok(path_buf)
     }
