@@ -1,9 +1,7 @@
 use iced::{
-    alignment,
     theme::Button as ButtonTheme,
     widget::{
-        button, column, container, horizontal_space, row, scrollable, text, text_input, Button,
-        Column,
+        button, column, container, horizontal_space, row, scrollable, text_input, Button, Column,
     },
     Alignment, Command, Element, Length,
 };
@@ -110,6 +108,67 @@ impl Todo {
         )
         .padding(10)
         .into()
+    }
+
+    pub fn update_lists_bar(&mut self, lists_bar_message: ListsBarMessage) -> Command<Message> {
+        match lists_bar_message {
+            ListsBarMessage::Edit(index, edit_message) => match edit_message {
+                EditMessage::Name(edit) => {
+                    self.todo_lists[index].name = edit;
+
+                    Command::none()
+                }
+                EditMessage::Delete => {
+                    self.todo_lists.remove(index);
+                    self.current_list = None;
+                    self.is_dirty = true;
+
+                    Command::none()
+                }
+                EditMessage::Done => {
+                    self.todo_lists[index].is_editing = false;
+                    self.is_dirty = true;
+
+                    Command::none()
+                }
+            },
+            ListsBarMessage::Regular(index, regular_message) => match regular_message {
+                RegularMessage::StartEdit => {
+                    self.todo_lists[index].is_editing = true;
+
+                    Command::none()
+                }
+            },
+            ListsBarMessage::NewList(new_list_message) => match new_list_message {
+                NewListMessage::Submit => {
+                    if !&self.lists_bar.new_list_input.is_empty() {
+                        self.todo_lists
+                            .push(TodoList::new(&self.lists_bar.new_list_input));
+
+                        self.is_dirty = true;
+                    }
+
+                    self.lists_bar.is_adding_list = false;
+
+                    Command::none()
+                }
+                NewListMessage::Input(edit) => {
+                    self.lists_bar.new_list_input = edit;
+
+                    Command::none()
+                }
+            },
+            ListsBarMessage::Select(index) => {
+                self.current_list = Some(index);
+
+                Command::none()
+            }
+            ListsBarMessage::AddingList => {
+                self.lists_bar.is_adding_list = true;
+
+                Command::none()
+            }
+        }
     }
 }
 

@@ -1,30 +1,21 @@
 use std::path::PathBuf;
-use std::ptr::hash;
 
 use crate::utils::check_dirty;
 
 use super::persistance::{self, PersistError, Persistance};
-use super::styling;
 use super::widgets::filter::{filter_button, Filter};
-use super::widgets::lists_bar::{
-    EditMessage, ListsBar, ListsBarMessage, NewListMessage, RegularMessage,
-};
+use super::widgets::lists_bar::{ListsBar, ListsBarMessage};
 use super::widgets::todo::todo_list::{TodoList, TodoListMessage};
-use iced::theme;
 use iced::{
     executor,
-    theme::Button as ButtonTheme,
-    widget::{
-        button, column, container, horizontal_space, row, scrollable, text, text_input,
-        vertical_space, Button, Column,
-    },
-    Application, Command, Element, Length, Renderer, Theme,
+    widget::{column, horizontal_space, row, text},
+    Application, Command, Element, Renderer, Theme,
 };
 
 pub struct Todo {
     pub todo_lists: Vec<TodoList>,
     is_dark: bool,
-    is_dirty: bool,
+    pub is_dirty: bool,
     pub current_list: Option<usize>,
     status: Result<String, PersistError>,
     filter: Filter,
@@ -123,69 +114,7 @@ impl Application for Todo {
             Message::List(list_index, message) => {
                 self.todo_lists.get_mut(list_index).unwrap().update(message)
             }
-            Message::SetFilter(filter) => {
-                self.filter = filter;
-
-                Command::none()
-            }
-            Message::ListsBar(list_bar_message) => match list_bar_message {
-                ListsBarMessage::Edit(index, edit_message) => match edit_message {
-                    EditMessage::Name(edit) => {
-                        self.todo_lists[index].name = edit;
-
-                        Command::none()
-                    }
-                    EditMessage::Delete => {
-                        self.todo_lists.remove(index);
-                        self.current_list = None;
-                        self.is_dirty = true;
-
-                        Command::none()
-                    }
-                    EditMessage::Done => {
-                        self.todo_lists[index].is_editing = false;
-                        self.is_dirty = true;
-
-                        Command::none()
-                    }
-                },
-                ListsBarMessage::Regular(index, regular_message) => match regular_message {
-                    RegularMessage::StartEdit => {
-                        self.todo_lists[index].is_editing = true;
-
-                        Command::none()
-                    }
-                },
-                ListsBarMessage::NewList(new_list_message) => match new_list_message {
-                    NewListMessage::Submit => {
-                        if !&self.lists_bar.new_list_input.is_empty() {
-                            self.todo_lists
-                                .push(TodoList::new(&self.lists_bar.new_list_input));
-
-                            self.is_dirty = true;
-                        }
-
-                        self.lists_bar.is_adding_list = false;
-
-                        Command::none()
-                    }
-                    NewListMessage::Input(edit) => {
-                        self.lists_bar.new_list_input = edit;
-
-                        Command::none()
-                    }
-                },
-                ListsBarMessage::Select(index) => {
-                    self.current_list = Some(index);
-
-                    Command::none()
-                }
-                ListsBarMessage::AddingList => {
-                    self.lists_bar.is_adding_list = true;
-
-                    Command::none()
-                }
-            },
+            Message::ListsBar(lists_bar_message) => self.update_lists_bar(lists_bar_message),
         };
 
         self.is_dirty = check_dirty(&self.is_dirty, &self.todo_lists, |list| list.is_dirty);
